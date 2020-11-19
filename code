@@ -1,0 +1,124 @@
+---
+title: 'Principle component analysis and correlation testing '
+output:
+  word_document: default
+  html_document: default
+---    
+
+Here we present a statistical evaluation of the dataset. We aimed to find significant  correaltions of individual variables and performed a principal component analysis. The open source program R  was used for thes calcualtions. The libraries used, the dataset produced, as well as the code producing the individual tables and plots is presented below.  
+
+```{r setup,echo=FALSE}
+knitr::opts_chunk$set(dpi=600) 
+```
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+library("factoextra")
+library("FactoMineR")
+library("corrplot")
+library("PerformanceAnalytics")
+library("knitr")
+library("readxl")
+library("tidyverse")
+library("psych")
+library("GGally")
+
+```
+
+
+
+```{r, echo=FALSE}
+PCA_raw <- read_excel("C:/Users/DS User 49/DirectSens/DirectSensAll - DirectSens Documents/1 General/Individual Folders/Alfons Felice/ACS Manuscript/PCA.raw.xlsx")
+PCA_raw1<-PCA_raw %>% select(1:4,6:9,12,13)
+```
+# Principle Component Analysis
+The table 1 summarizes the dataset used for calculations. Columns 1-4 are factors, while column 4 to 8 are computed as continuous variables, measured as described in the main manuscript. "Glycosilation" represents the mass % of gylcochains vs. sequence based calculated mass of the individual chimeras.  
+
+```{r, echo=FALSE}
+kable(PCA_raw1)
+```
+
+# Data overview
+Correlation analysis of all variables recorded for the individual chimeric variants as shown in table 1 has been computed.  Significant correlation, as indicated by 3 stars in the plot, can be observed for type of cytochrome domain (CYT-type) and the midpoint potenial (E1/2-Cyt). The maximum IDET rate(IDET) recorded by stopped flow correlates significantly with maximum turnover number measured with cyt c as electron acceptor (TN-at-pH6). Further the maximum FAD reduction rates (FAD-kobs) show strong correlation to the  type of dehydrogenase domain (DH-type). Note: The "Name" column has been removed from analysis. 
+```{r}
+pairs.panels(PCA_raw1%>%select(2:10),
+             stars=TRUE,
+             ellipses=FALSE,
+             density=TRUE,
+             jiggle = FALSE,
+             pch = 20)
+```
+
+# Principle component anaylsis 
+````{r}
+rez.FAMD<-FAMD(PCA_raw1,sup.var = 1 ,graph = FALSE)
+
+qunati.var <- get_famd_var(rez.FAMD)
+```
+
+Principal component analysis combining factorial data, such as the type of the domains with continuous variables such as the observed rates, has been calcualted. Of note, the "Name" column has been  used as supplemental factor representation but not computation.
+
+
+# Individual contribution
+Figure 2 to 4 show the  contribution of the individual variables to the dimensions (1,2 and 3 respectively), as well as the sum of contributions to the first two dimensions.The  table summarizes the contribution of the individual factors to each dimension.
+
+```{r, echo=FALSE}
+kable(rez.FAMD[["var"]][["contrib"]])
+fviz_contrib(rez.FAMD, "var", axes = 1)
+fviz_contrib(rez.FAMD, "var", axes = 2)
+fviz_contrib(rez.FAMD, "var", axes = 3)
+fviz_contrib(rez.FAMD, "var", axes = 1:2)
+```
+# Screeplot and contribution of Variables to dimensions 
+Table 3 shows the contribution of the variable to each dimension of the PCA space. As summarized in the "scree plot" (Figure X) the first two dimensions explain 68.5 % of the variance of the dataset. Further data representation is focused to these two dimensions.
+
+```{r,echo=FALSE}
+kable(rez.FAMD[["eig"]])
+
+```
+
+````{r}
+fviz_screeplot(rez.FAMD)
+```
+
+
+
+# Contriubition of the qualitative variables
+The individual domains of the chimeric variables have been defined as qualitative variables. Figure x reveals their position on the first two dimensions.
+
+````{r, echo=FALSE}
+fviz_famd_var(rez.FAMD, c("quali.var"), col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE
+             )
+```
+
+# Contriubition of the quantitative variables
+The contribution of the quantitative variables are summarized in the figures below.
+````{r,echo=FALSE}
+fviz_famd_var(rez.FAMD, "quanti.var", col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             geom = (c("point","text")),
+             repel = TRUE)
+        
+```
+# Map of individuals 
+The figure shows the individual chimeric variants  mapped onto the two dimensions. 
+````{r}
+fviz(rez.FAMD,c("ind"), 
+     habillage = "Name",
+     label = "Name"
+     )
+```
+
+
+# All variables 
+The plot below combines qualitative and quantitative variables. The  variables have been transformed by squared correlation ratios so they can be plotted within one graph. The color gradient represents the contribution of each variable to the two dimensions.  
+````{r}
+fviz_famd_var(rez.FAMD, col.var = "contrib",
+              axes = c(1,2),
+              geom = c("point", "text"),
+              choice = c("var", "quanti.var", "quali.var"),
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+              repel = TRUE)
+```
+
